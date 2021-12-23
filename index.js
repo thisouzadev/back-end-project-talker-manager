@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const crypto = require('crypto');
 
 const app = express();
 app.use(bodyParser.json());
@@ -24,14 +25,47 @@ const getTalker = (_req, res) => {
 };
 
 const getTalkerId = (req, res, _next) => {
-const { id } = req.params;
-console.log(id);
-const data = JSON.parse(fs.readFileSync(TALKER_FILE, 'utf-8'));
-const dataID = data.find((item) => item.id === Number(id));
+  const { id } = req.params;
+  console.log(id);
+  const data = JSON.parse(fs.readFileSync(TALKER_FILE, 'utf-8'));
+  const dataID = data.find((item) => item.id === Number(id));
 
-if (!dataID) { return res.status(404).json({ message: 'Pessoa palestrante não encontrada' }); }
-res.status(HTTP_OK_STATUS).json(dataID);
+  if (!dataID) { return res.status(404).json({ message: 'Pessoa palestrante não encontrada' }); }
+  res.status(HTTP_OK_STATUS).json(dataID);
+};
+
+const validateEmail = (req, res, next) => {
+  const { email } = req.body;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || email === '') {
+    return res.status(400).json({
+      message: 'O campo "email" é obrigatório',
+    });
+  }
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: 'O "email" deve ter o formato "email@email.com"' });
+  }
+  next();
+};
+
+const validatePassword = (req, res, next) => {
+  const { password } = req.body;
+
+  if (!password) {
+    return res.status(400).json({ message: 'O campo "password" é obrigatório' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ message: 'O "password" deve ter pelo menos 6 caracteres' });
+  }
+  next();
+};
+// https://qastack.com.br/programming/8855687/secure-random-token-in-node-js
+const generateToken = (_req, res) => {
+  const token = crypto.randomBytes(8).toString('hex');
+  console.log(token);
+  return res.status(HTTP_OK_STATUS).json({ token });
 };
 
 app.get('/talker', getTalker);
 app.get('/talker/:id', getTalkerId);
+app.post('/login', validateEmail, validatePassword, generateToken);
