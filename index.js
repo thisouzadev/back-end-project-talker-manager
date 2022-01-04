@@ -26,7 +26,6 @@ const getTalker = (_req, res) => {
 
 const getTalkerId = (req, res, _next) => {
   const { id } = req.params;
-  console.log(id);
   const data = JSON.parse(fs.readFileSync(TALKER_FILE, 'utf-8'));
   const dataID = data.find((item) => item.id === Number(id));
 
@@ -75,7 +74,7 @@ const generateToken = (_req, res) => {
 }; */
 
 // recebi ajuda do Lopes - turma13 - tribo C para criar a função createTalker
-const createTalker = async (req, res, _next) => {
+const createTalker = (req, res, _next) => {
   const { name, age, talk } = req.body;
   const newTalker = {
     id: 5,
@@ -83,22 +82,17 @@ const createTalker = async (req, res, _next) => {
     age,
     talk,
   };
-  try {
-    const talkers = JSON.parse(fs.readFileSync('talker.json', 'utf-8'));
-    const newList = [...talkers, newTalker];
-    await fs.writeFile(TALKER_FILE, JSON.stringify(newList), (err, _data) => {
-      if (err) console.log(err);
-    });
-  } catch (err) {
-    console.log(err);
-  }
+
+  const talkers = JSON.parse(fs.readFileSync('talker.json', 'utf-8'));
+  const newList = [...talkers, newTalker];
+  fs.writeFileSync(TALKER_FILE, JSON.stringify(newList));
+
   return res.status(201).json(newTalker);
 };
 
 const isValidToken = (req, res, next) => {
   const token = req.headers.authorization;
 
-  console.log(token);
   if (!token) {
     return res.status(401).json({ message: 'Token não encontrado' });
   }
@@ -170,6 +164,29 @@ const isValidTalk2 = (req, res, next) => {
   next();
 };
 
+const editTalker = (req, res, _next) => {
+  const { name, age, talk } = req.body;
+  const { id } = req.params;
+  const talkers = JSON.parse(fs.readFileSync('talker.json', 'utf-8'));
+  const itemTalker = talkers.find((item) => item.id !== Number(id));
+  console.log(itemTalker);
+  /* let newTalker = { ...itemTalker, name, age, talk }; */
+  /* fs.writeFileSync(TALKER_FILE, JSON.stringify(newTalker)); */
+
+  return res.status(201).json(itemTalker);
+};
+
+const deleteTalker = (req, res, next) => {
+  const { id } = req.params;
+  const talkers = JSON.parse(fs.readFileSync('talker.json', 'utf-8'));
+  const itemTalker = talkers.filter((item) => item.id !== Number(id));
+
+  fs.writeFileSync(TALKER_FILE, JSON.stringify(itemTalker));
+
+  return res.status(200).json({ message: 'Pessoa palestrante deletada com sucesso' });
+  next();
+};
+
 app.get('/talker', getTalker);
 app.get('/talker/:id', getTalkerId);
 app.post('/login', validateEmail, validatePassword, generateToken);
@@ -180,3 +197,13 @@ app.post('/talker',
   isValidTalk2,
   isValidTalk,
   createTalker);
+
+/* app.put('/talker/:id',
+  // isValidName,
+  // isValidToken,
+  // isValidAge,
+  // isValidTalk2,
+  // isValidTalk,
+  editTalker); */
+
+app.delete('/talker/:id', isValidToken, deleteTalker);
