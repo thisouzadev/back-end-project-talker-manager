@@ -174,7 +174,7 @@ const isValidTalk2 = (req, res, next) => {
 //   /* fs.writeFileSync(TALKER_FILE, JSON.stringify(newTalker)); */
 
 //   return res.status(201).json(itemTalker);
-// };
+// }; 
 
 const deleteTalker = (req, res, _next) => {
   const { id } = req.params;
@@ -186,7 +186,20 @@ const deleteTalker = (req, res, _next) => {
   return res.status(200).json({ message: 'Pessoa palestrante deletada com sucesso' });
 };
 
+const searchTalkers = (req, res) => {
+const { q } = req.query;
+const talkers = JSON.parse(fs.readFileSync('talker.json', 'utf-8'));
+const searchTalker = talkers.filter((item) => item.name.includes(q));
+if (q === '') {
+  return res.status(200).json(talkers);
+} if (!searchTalker) {
+  return res.status(200).json([]);
+}
+return res.status(200).json(searchTalker);
+};
+
 app.get('/talker', getTalker);
+app.get('/talker/search', isValidToken, searchTalkers); // necessario ficar em cima do id para nao confudir a funçao e pegar o id
 app.get('/talker/:id', getTalkerId);
 app.post('/login', validateEmail, validatePassword, generateToken);
 app.post('/talker',
@@ -197,12 +210,11 @@ app.post('/talker',
   isValidTalk,
   createTalker);
 
-// app.put('/talker/:id',
+/* app.put('/talker/:id',
   // isValidName,
   // isValidToken,
   // isValidAge,
   // isValidTalk2,
   // isValidTalk,
-  // editTalker);
-
+  editTalker); */
 app.delete('/talker/:id', isValidToken, deleteTalker);
