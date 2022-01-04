@@ -164,17 +164,17 @@ const isValidTalk2 = (req, res, next) => {
   next();
 };
 
-const editTalker = (req, res, _next) => {
-  const { name, age, talk } = req.body;
-  const { id } = req.params;
-  const talkers = JSON.parse(fs.readFileSync('talker.json', 'utf-8'));
-  const itemTalker = talkers.find((item) => item.id !== Number(id));
-  console.log(itemTalker);
-  /* let newTalker = { ...itemTalker, name, age, talk }; */
-  /* fs.writeFileSync(TALKER_FILE, JSON.stringify(newTalker)); */
+// const editTalker = (req, res, _next) => {
+//   // const { name, age, talk } = req.body;
+//   const { id } = req.params;
+//   const talkers = JSON.parse(fs.readFileSync('talker.json', 'utf-8'));
+//   const itemTalker = talkers.find((item) => item.id !== Number(id));
+//   console.log(itemTalker);
+//   /* let newTalker = { ...itemTalker, name, age, talk }; */
+//   /* fs.writeFileSync(TALKER_FILE, JSON.stringify(newTalker)); */
 
-  return res.status(201).json(itemTalker);
-};
+//   return res.status(201).json(itemTalker);
+// };
 
 const deleteTalker = (req, res, _next) => {
   const { id } = req.params;
@@ -197,12 +197,12 @@ app.post('/talker',
   isValidTalk,
   createTalker);
 
-/* app.put('/talker/:id',
+// app.put('/talker/:id',
   // isValidName,
   // isValidToken,
   // isValidAge,
   // isValidTalk2,
   // isValidTalk,
-  editTalker); */
+  // editTalker);
 
 app.delete('/talker/:id', isValidToken, deleteTalker);
