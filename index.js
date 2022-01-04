@@ -62,23 +62,43 @@ const validatePassword = (req, res, next) => {
 // https://qastack.com.br/programming/8855687/secure-random-token-in-node-js
 const generateToken = (_req, res) => {
   const token = crypto.randomBytes(8).toString('hex');
-  console.log(token);
   return res.status(HTTP_OK_STATUS).json({ token });
 };
 
-const createTalker = async (req, res, _next) => {
+/* const createTalker = async (req, res, _next) => {
   const { name, age, talk } = req.body;
   const newTalker = { id: 5, name, talk, age };
   const data = JSON.parse(fs.readFileSync(TALKER_FILE, 'utf-8'));
   const newList = [...data, newTalker];
-  fs.writeFile(TALKER_FILE, newList);
+  fs.writeFile(TALKER_FILE, JSON.stringify(newList));
+  return res.status(201).json(newTalker);
+}; */
+
+// recebi ajuda do Lopes - turma13 - tribo C para criar a função createTalker
+const createTalker = async (req, res, _next) => {
+  const { name, age, talk } = req.body;
+  const newTalker = {
+    id: 5,
+    name,
+    age,
+    talk,
+  };
+  try {
+    const talkers = JSON.parse(fs.readFileSync('talker.json', 'utf-8'));
+    const newList = [...talkers, newTalker];
+    await fs.writeFile(TALKER_FILE, JSON.stringify(newList), (err, _data) => {
+      if (err) console.log(err);
+    });
+  } catch (err) {
+    console.log(err);
+  }
   return res.status(201).json(newTalker);
 };
 
 const isValidToken = (req, res, next) => {
   const token = req.headers.authorization;
   const tokenRegex = !/^[a-zA-Z0-9]{12}$/;
-
+  console.log(token);
   if (!token) {
     return res.status(401).json({ message: 'Token não encontrado' });
   }
@@ -119,40 +139,72 @@ const isValidAge = (req, res, next) => {
 };
 
 // https://qastack.com.br/programming/15491894/regex-to-validate-date-format-dd-mm-yyyy
-const isValidTalk = (req, res, next) => {
-  const { talk } = req.body;
-  const { watchedAt, rate } = talk;
-  const calendarRegex = /^[0-3]?[0-9].[0-3]?[0-9].(?:[0-9]{2})?[0-9]{2}$/;
-  if (calendarRegex.test(watchedAt)) {
-    return res.status(400).json({ message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa' });
+// const isValidTalk = (req, res, next) => {
+//   const { talk } = req.body;
+//   const { watchedAt, rate } = talk;
+//   const { talk } = req.body;
+//   const { watchedAt, rate } = talk;
+//   // const calendarRegex = /^[0-3]?[0-9].[0-3]?[0-9].(?:[0-9]{2})?[0-9]{2}$/;
+//   const calendarRegex = /^(0?[1-9]|[12][0-9]|3[01])[/-](0?[1-9]|1[012])[/-]\d{4}$/;
+//   if (calendarRegex.test(watchedAt)) {
+//     return res.status(400).json({ message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa' });
+//   }
+//   if (rate >= 1 || rate <= 5) {
+//     return res.status(400).json({ message: 'O campo "rate" deve ser um inteiro de 1 à 5' });
+//   }
+//   next();
+// };
+
+// const isValidTalk2 = (req, res, next) => {
+
+//   if (!talk || watchedAt === '' || rate === '') {
+//     return res.status(400).json({
+//       message: 'O campo "talk" é obrigatório e "watchedAt" e "rate" não podem ser vazios',
+//     });
+//   }
+//   next();
+// };
+
+function objectTalkCheckerDateRate(req, res, next) {
+  const {
+    talk: { watchedAt, rate },
+  } = req.body;
+  const regexDate = /^(0?[1-9]|[12][0-9]|3[01])[/-](0?[1-9]|1[012])[/-]\d{4}$/;
+
+  if (!regexDate.test(watchedAt)) {
+    return res
+      .status(400)
+      .json({ message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa"' });
   }
-  if (rate >= 1 || rate <= 5) {
-    return res.status(400).json({ message: 'O campo "rate" deve ser um inteiro de 1 à 5' });
+  if (rate < 1 || rate > 5) {
+    return res
+      .status(400)
+      .json({ message: 'O campo "rate" deve ser um inteiro de 1 à 5' });
   }
   next();
-};
+}
 
-const isValidTalk2 = (req, res, next) => {
+function objectTalkerChecker(req, res, next) {
   const { talk } = req.body;
-  const { watchedAt, rate } = talk;
 
-  if (!talk || watchedAt === '' || rate === '') {
-    return res.status(400).json({
-      message: 'O campo "talk" é obrigatório e "watchedAt" e "rate" não podem ser vazios',
-    });
+  if (!talk) {
+    return res
+      .status(400)
+      .json({
+        message:
+          'O campo "talk" é obrigatório e "watchedAt" e "rate" não podem ser vazios',
+      });
   }
   next();
-};
+}
 
 app.get('/talker', getTalker);
 app.get('/talker/:id', getTalkerId);
 app.post('/login', validateEmail, validatePassword, generateToken);
-app.post(
-  '/talker',
-  createTalker,
-  /*  isValidName,
-   isValidAge,
-   isValidToken,
-   isValidTalk,
-   isValidTalk2, */
-);
+app.post('/talker', isValidName, isValidAge,
+  objectTalkCheckerDateRate,
+  objectTalkerChecker,
+  // isValidToken,
+  // isValidTalk,
+  // isValidTalk2,
+  createTalker);
