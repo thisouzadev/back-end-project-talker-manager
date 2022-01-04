@@ -184,7 +184,6 @@ const deleteTalker = (req, res, next) => {
   fs.writeFileSync(TALKER_FILE, JSON.stringify(itemTalker));
 
   return res.status(200).json({ message: 'Pessoa palestrante deletada com sucesso' });
-  next();
 };
 
 app.get('/talker', getTalker);
