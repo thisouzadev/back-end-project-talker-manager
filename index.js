@@ -176,7 +176,7 @@ const editTalker = (req, res, _next) => {
   return res.status(201).json(itemTalker);
 };
 
-const deleteTalker = (req, res, next) => {
+const deleteTalker = (req, res, _next) => {
   const { id } = req.params;
   const talkers = JSON.parse(fs.readFileSync('talker.json', 'utf-8'));
   const itemTalker = talkers.filter((item) => item.id !== Number(id));
