@@ -173,8 +173,10 @@ const isValidTalk2 = (req, res, next) => {
 app.get('/talker', getTalker);
 app.get('/talker/:id', getTalkerId);
 app.post('/login', validateEmail, validatePassword, generateToken);
-app.post('/talker', isValidName, isValidAge,
+app.post('/talker',
+  isValidName,
+  isValidToken,
+  isValidAge,
   isValidTalk2,
   isValidTalk,
-  isValidToken,
   createTalker);
