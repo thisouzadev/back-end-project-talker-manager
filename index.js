@@ -97,12 +97,12 @@ const createTalker = async (req, res, _next) => {
 
 const isValidToken = (req, res, next) => {
   const token = req.headers.authorization;
-  const tokenRegex = !/^[a-zA-Z0-9]{12}$/;
+
   console.log(token);
   if (!token) {
     return res.status(401).json({ message: 'Token não encontrado' });
   }
-  if (tokenRegex.test(token)) {
+  if (token.length !== 16) {
     return res.status(401).json({ message: 'Token inválido' });
   }
   next();
@@ -137,74 +137,44 @@ const isValidAge = (req, res, next) => {
 
   next();
 };
+// lopes me ajudou a entender o pq estava errado meu date
+const isValidTalk = (req, res, next) => {
+  const { talk } = req.body;
+  const { watchedAt, rate } = talk;
+  const dateRegex = /^(0?[1-9]|[12][0-9]|3[01])[/-](0?[1-9]|1[012])[/-]\d{4}$/;
 
-// https://qastack.com.br/programming/15491894/regex-to-validate-date-format-dd-mm-yyyy
-// const isValidTalk = (req, res, next) => {
-//   const { talk } = req.body;
-//   const { watchedAt, rate } = talk;
-//   const { talk } = req.body;
-//   const { watchedAt, rate } = talk;
-//   // const calendarRegex = /^[0-3]?[0-9].[0-3]?[0-9].(?:[0-9]{2})?[0-9]{2}$/;
-//   const calendarRegex = /^(0?[1-9]|[12][0-9]|3[01])[/-](0?[1-9]|1[012])[/-]\d{4}$/;
-//   if (calendarRegex.test(watchedAt)) {
-//     return res.status(400).json({ message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa' });
-//   }
-//   if (rate >= 1 || rate <= 5) {
-//     return res.status(400).json({ message: 'O campo "rate" deve ser um inteiro de 1 à 5' });
-//   }
-//   next();
-// };
-
-// const isValidTalk2 = (req, res, next) => {
-
-//   if (!talk || watchedAt === '' || rate === '') {
-//     return res.status(400).json({
-//       message: 'O campo "talk" é obrigatório e "watchedAt" e "rate" não podem ser vazios',
-//     });
-//   }
-//   next();
-// };
-
-function objectTalkCheckerDateRate(req, res, next) {
-  const {
-    talk: { watchedAt, rate },
-  } = req.body;
-  const regexDate = /^(0?[1-9]|[12][0-9]|3[01])[/-](0?[1-9]|1[012])[/-]\d{4}$/;
-
-  if (!regexDate.test(watchedAt)) {
-    return res
-      .status(400)
-      .json({ message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa"' });
+  if (!dateRegex.test(watchedAt)) {
+    return res.status(400).json({ message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa"' });
   }
   if (rate < 1 || rate > 5) {
-    return res
-      .status(400)
-      .json({ message: 'O campo "rate" deve ser um inteiro de 1 à 5' });
+    return res.status(400).json({ message: 'O campo "rate" deve ser um inteiro de 1 à 5' });
   }
   next();
-}
+};
 
-function objectTalkerChecker(req, res, next) {
+const isValidTalk2 = (req, res, next) => {
   const { talk } = req.body;
 
   if (!talk) {
-    return res
-      .status(400)
-      .json({
-        message:
-          'O campo "talk" é obrigatório e "watchedAt" e "rate" não podem ser vazios',
-      });
+    return res.status(400).json({
+      message: 'O campo "talk" é obrigatório e "watchedAt" e "rate" não podem ser vazios',
+    });
+  }
+  // ajuda lopes para criar esse if onde verifica se existe watchedAt e rate dentro de talk
+  if (!('watchedAt' in talk) || !('rate' in talk)) {
+    return res.status(400).json({
+      message:
+        'O campo "talk" é obrigatório e "watchedAt" e "rate" não podem ser vazios',
+    });
   }
   next();
-}
+};
 
 app.get('/talker', getTalker);
 app.get('/talker/:id', getTalkerId);
 app.post('/login', validateEmail, validatePassword, generateToken);
 app.post('/talker', isValidName, isValidAge,
-  objectTalkCheckerDateRate,
-  objectTalkerChecker,
-  // isValidToken,
-  // isValidTalk,
-  // isValidTalk2,
+  isValidTalk2,
+  isValidTalk,
+  isValidToken,
   createTalker);
