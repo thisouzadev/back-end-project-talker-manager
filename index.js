@@ -168,7 +168,7 @@ const editTalker = (req, res, _next) => {
   const { name, age, talk } = req.body;
   const { id } = req.params;
   const newTalker = { id: Number(id), name, age, talk };
-  const talkers = JSON.parse(fs.readFileSync('talker.json', 'utf-8'));
+  const talkers = JSON.parse(fs.readFileSync(TALKER_FILE, 'utf-8'));
   const itemTalker = talkers.filter((item) => item.id !== Number(id));
   const newList = [...itemTalker, newTalker];
   fs.writeFileSync(TALKER_FILE, JSON.stringify(newList));
@@ -177,7 +177,7 @@ const editTalker = (req, res, _next) => {
 
 const deleteTalker = (req, res, _next) => {
   const { id } = req.params;
-  const talkers = JSON.parse(fs.readFileSync('talker.json', 'utf-8'));
+  const talkers = JSON.parse(fs.readFileSync(TALKER_FILE, 'utf-8'));
   const itemTalker = talkers.filter((item) => item.id !== Number(id));
 
   fs.writeFileSync(TALKER_FILE, JSON.stringify(itemTalker));
@@ -187,7 +187,7 @@ const deleteTalker = (req, res, _next) => {
 
 const searchTalkers = (req, res) => {
 const { q } = req.query;
-const talkers = JSON.parse(fs.readFileSync('talker.json', 'utf-8'));
+const talkers = JSON.parse(fs.readFileSync(TALKER_FILE, 'utf-8'));
 const searchTalker = talkers.filter((item) => item.name.includes(q));
 if (q === '') {
   return res.status(200).json(talkers);
